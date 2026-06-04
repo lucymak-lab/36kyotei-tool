@@ -52,8 +52,10 @@ python3 -m http.server 8000
 ## 🛠 技術構成
 
 - 純粋な HTML / CSS / バニラ JavaScript（フレームワーク・ビルド不要）
-- [docx](https://github.com/dolanmiu/docx) — Word(.docx) 生成（CDN読み込み）
-- [JSZip](https://github.com/Stuk/jszip) — ZIP一括ダウンロード（CDN読み込み）
+- [docx](https://github.com/dolanmiu/docx) v7.8.2 — Word(.docx) 生成
+- [JSZip](https://github.com/Stuk/jszip) v3.10.1 — ZIP一括ダウンロード
+
+外部ライブラリは `vendor/` に**同梱**しています。CDNに依存せず、**ネット接続なし（完全オフライン）でも動作**します。これによりサプライチェーン経由でのコード改ざんリスクを排除し、入力した労務データが外部に漏れる経路を一切持たない構成になっています。
 
 ## ⚠️ 免責事項
 
