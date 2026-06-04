@@ -5,7 +5,7 @@
 
 > 様式第9号（一般条項）と様式第9号の2（特別条項）の両方に対応しています。
 
-[**▶ オンラインで使う**](#-オンラインデモ) ・ [English](#english)
+[**▶ オンラインで使う（インストール不要）**](https://lucymak-lab.github.io/36kyotei-tool/) ・ [English](#english)
 
 ---
 
@@ -47,7 +47,9 @@ python3 -m http.server 8000
 
 ## 🌐 オンラインデモ
 
-> 公開後にURLをここへ記載します（GitHub Pages 予定）。
+**https://lucymak-lab.github.io/36kyotei-tool/**
+
+インストール不要、ブラウザで開いてすぐ使えます。入力データはあなたのブラウザ内だけで処理され、外部に送信されません。
 
 ## 🛠 技術構成
 
