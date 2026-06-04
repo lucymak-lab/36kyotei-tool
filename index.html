@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>36協定届 作成ツール</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  </head>
+  <body>
+    <header class="hdr">
+      <div class="hdr-left">
+        <span class="eyebrow">Legal Tool</span>
+        <h1>36協定届 作成ツール</h1>
+      </div>
+      <div class="hdr-right">
+        <button class="theme-btn" id="themeBtn" title="テーマ切替">🌙</button>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="toolbar-spacer"></div>
+      <div class="export-group">
+        <label class="btn btn-secondary btn-sm" title="JSONから読み込む" style="cursor:pointer">
+          📂 読み込み
+          <input type="file" accept=".json" style="display:none" onchange="loadJSON(this.files[0]);this.value=''" />
+        </label>
+        <button class="btn btn-secondary btn-sm" onclick="saveJSON()">💾 保存</button>
+        <button class="btn btn-secondary btn-sm" id="btnForm9">📄 様式第9号</button>
+        <button class="btn btn-secondary btn-sm" id="btnForm9no2">📄 様式第9号の2（特別条項）</button>
+        <button class="btn btn-primary btn-sm" id="btnZip">⬇ ZIP一括</button>
+      </div>
+    </div>
+
+    <div class="main">
+
+      <!-- 事業場情報 -->
+      <section class="form-section">
+        <h2 class="section-title">事業場情報</h2>
+        <div class="form-grid">
+          <label class="form-field">
+            <span>事業の種類</span>
+            <input type="text" id="f-biztype" value="製造業" />
+          </label>
+          <label class="form-field">
+            <span>事業の名称（会社名）</span>
+            <input type="text" id="f-company" placeholder="株式会社○○製作所" />
+          </label>
+          <label class="form-field span2">
+            <span>事業の所在地</span>
+            <input type="text" id="f-address" placeholder="東京都○○区○○1-2-3" />
+          </label>
+          <label class="form-field">
+            <span>電話番号</span>
+            <input type="tel" id="f-tel" placeholder="03-0000-0000" />
+          </label>
+          <label class="form-field">
+            <span>使用者職氏名</span>
+            <input type="text" id="f-rep" placeholder="代表取締役 氏名" />
+          </label>
+        </div>
+      </section>
+
+      <!-- 業務・労働者情報 -->
+      <section class="form-section">
+        <h2 class="section-title">業務・労働者情報</h2>
+        <div class="work-table">
+          <div class="work-head">
+            <span>業務の種類</span>
+            <span>労働者数</span>
+            <span>所定労働時間/日</span>
+            <span>具体的事由</span>
+            <span></span>
+          </div>
+          <div id="workRows"></div>
+        </div>
+        <button class="btn btn-secondary btn-sm add-row-btn" id="addWorkBtn">＋ 業務を追加</button>
+      </section>
+
+      <!-- 一般条項 -->
+      <section class="form-section">
+        <h2 class="section-title">一般条項（延長できる時間数）</h2>
+        <div class="limit-guide">
+          <span>上限：</span>
+          <span class="limit-item">1か月 <strong>45時間</strong></span>
+          <span class="limit-sep">/</span>
+          <span class="limit-item">1年間 <strong>360時間</strong></span>
+        </div>
+        <div class="form-grid">
+          <label class="form-field">
+            <span>1日</span>
+            <div class="input-unit">
+              <input type="number" id="f-limit-day" placeholder="2" min="1" max="5" />
+              <span class="unit">時間</span>
+            </div>
+          </label>
+          <label class="form-field">
+            <span>1か月</span>
+            <div class="input-unit">
+              <input type="number" id="f-limit-month" placeholder="45" min="1" max="45" />
+              <span class="unit">時間</span>
+            </div>
+          </label>
+          <label class="form-field">
+            <span>1年間</span>
+            <div class="input-unit">
+              <input type="number" id="f-limit-year" placeholder="360" min="1" max="360" />
+              <span class="unit">時間</span>
+            </div>
+          </label>
+          <label class="form-field">
+            <span>起算日（1年単位）</span>
+            <input type="date" id="f-start-date" />
+          </label>
+        </div>
+      </section>
+
+      <!-- 休日労働 -->
+      <section class="form-section">
+        <h2 class="section-title">休日労働</h2>
+        <div class="form-grid">
+          <label class="form-field span2">
+            <span>労働させることができる休日</span>
+            <input type="text" id="f-holiday" placeholder="4週4日の法定休日（日曜日）" />
+          </label>
+          <label class="form-field">
+            <span>始業時刻</span>
+            <input type="time" id="f-holiday-start" value="08:00" />
+          </label>
+          <label class="form-field">
+            <span>終業時刻</span>
+            <input type="time" id="f-holiday-end" value="17:00" />
+          </label>
+        </div>
+      </section>
+
+      <!-- 特別条項 -->
+      <section class="form-section special-section">
+        <h2 class="section-title">特別条項 <span class="section-badge">様式第9号の2</span></h2>
+        <div class="limit-guide warn">
+          <span>上限：</span>
+          <span class="limit-item">1か月
+            <input class="guide-input" type="number" id="g-sp-month" value="100" min="1" max="100" />
+            時間未満</span>
+          <span class="limit-sep">/</span>
+          <span class="limit-item">1年間
+            <input class="guide-input" type="number" id="g-sp-year" value="720" min="1" max="720" />
+            時間以下</span>
+          <span class="limit-sep">/</span>
+          <span class="limit-item">複数月平均
+            <input class="guide-input" type="number" id="g-sp-avg" value="80" min="1" max="80" />
+            時間以下</span>
+          <span class="limit-sep">/</span>
+          <span class="limit-item">発動
+            <input class="guide-input" type="number" id="g-sp-count" value="6" min="1" max="6" />
+            回以内</span>
+        </div>
+        <div class="form-grid">
+          <label class="form-field span2">
+            <span>臨時的な特別の事情（具体的に）</span>
+            <textarea id="f-sp-reason" rows="2" placeholder="大規模受注の集中・設備の緊急修理・年度末の集中生産等"></textarea>
+          </label>
+          <label class="form-field">
+            <span>1か月の上限（特別）</span>
+            <div class="input-unit">
+              <input type="number" id="f-sp-month" placeholder="80" min="46" max="99" />
+              <span class="unit">時間未満</span>
+            </div>
+          </label>
+          <label class="form-field">
+            <span>1年間の上限（特別）</span>
+            <div class="input-unit">
+              <input type="number" id="f-sp-year" placeholder="720" min="361" max="720" />
+              <span class="unit">時間以下</span>
+            </div>
+          </label>
+          <label class="form-field">
+            <span>限度時間を超える回数（年）</span>
+            <div class="input-unit">
+              <input type="number" id="f-sp-count" placeholder="6" min="1" max="6" />
+              <span class="unit">回以内</span>
+            </div>
+          </label>
+          <label class="form-field">
+            <span>割増賃金率（25%以上）</span>
+            <div class="input-unit">
+              <input type="number" id="f-sp-rate" placeholder="25" min="25" max="100" />
+              <span class="unit">%以上</span>
+            </div>
+          </label>
+          <label class="form-field span2">
+            <span>限度時間を超えた場合の手続き</span>
+            <textarea id="f-sp-procedure" rows="2" placeholder="労働者代表との協議・確認の上、書面で通知する"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <!-- 協定の当事者 -->
+      <section class="form-section">
+        <h2 class="section-title">協定の当事者（労働者側）</h2>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="rep-type" value="union" />
+            <span>労働組合</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="rep-type" value="rep" checked />
+            <span>過半数を代表する者</span>
+          </label>
+        </div>
+        <div class="form-grid" id="union-fields" style="display:none">
+          <label class="form-field span2">
+            <span>労働組合の名称</span>
+            <input type="text" id="f-union-name" placeholder="○○労働組合" />
+          </label>
+        </div>
+        <div class="form-grid" id="rep-fields">
+          <label class="form-field">
+            <span>職名</span>
+            <input type="text" id="f-rep-title" placeholder="製造部 班長" />
+          </label>
+          <label class="form-field">
+            <span>氏名</span>
+            <input type="text" id="f-rep-name" placeholder="氏名" />
+          </label>
+          <label class="form-field span2">
+            <span>選出方法</span>
+            <input type="text" id="f-rep-how" value="投票による選出" />
+          </label>
+        </div>
+      </section>
+
+      <!-- 届出情報 -->
+      <section class="form-section">
+        <h2 class="section-title">届出情報</h2>
+        <div class="form-grid">
+          <label class="form-field">
+            <span>協定の有効期間（開始）</span>
+            <input type="date" id="f-valid-from" />
+          </label>
+          <label class="form-field">
+            <span>協定の有効期間（終了）</span>
+            <input type="date" id="f-valid-to" />
+          </label>
+          <label class="form-field">
+            <span>届出日</span>
+            <input type="date" id="f-submit-date" />
+          </label>
+          <label class="form-field">
+            <span>提出先労働基準監督署</span>
+            <input type="text" id="f-office" placeholder="○○労働基準監督署" />
+          </label>
+        </div>
+      </section>
+
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
